@@ -2,7 +2,7 @@ sqoop import \
 	--connect 'jdbc:as400://cmmp.corn.cargill.com:449;libraries=division;prompt=false' \
 	--driver com.ibm.as400.access.AS400JDBCDriver \
 	--username ps900191 \
-	--password SSN@cmmp18 \
+	--password 'hidden' \
 	--target-dir hdfs://nameservice1/dev/internal/cmmp/clean/sqoop_prctc \
 	--as-textfile \
 	--hive-import \
