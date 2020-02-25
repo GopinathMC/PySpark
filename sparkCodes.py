@@ -118,3 +118,36 @@ spark.udf.register('pow3',power3,DoubleType())
 #hiveUDF
 SparkSession.builder().enableHiveSupport()
 create temporary function/permanent as my_fun as 'com.organization.hive.udf.functionName'
+											     
+#aggregation
+df.groupBy('col1').agg(expr(avg(c2)),expr(stddev_pop(c3))).show()
+
+#window functions(rank,dense_rank)
+from pyspark.sql.window import Window
+from pyspark.sql.functions import dense_rank,rank,max
+Windowspec = Window.partitionBy('CustomerID','InvoiceDate').orderBy(desc('Quantity')).rowsBetween(Window.unboundedPreceding,Window.currentRow)
+maxPurchase = max(col('Quantity')).over(Windowspec)
+quantityDRank = dense_rank().over(Windowspec)
+quantityRank = rank().over(Windowspec)
+retailnew = retail.where('CustomerID is not null').orderBy('CustomerID').select(col('CustomerID'),col('InvoiceDate'),col('Quantity'),maxPurchase.alias('MaxPurchaseQuantity'),quantityDRank.alias('Dense'),quantityRank.alias('QRank'))
+""" OUTPUTvfor window function, 
+CustomerID|        InvoiceDate|Quantity|MaxPurchaseQuantity|Dense|QRank|
++----------+-------------------+--------+-------------------+-----+-----+
+|   12347.0|2010-12-07 14:57:00|      36|                 36|    1|    1|
+|   12347.0|2010-12-07 14:57:00|      30|                 36|    2|    2|
+|   12347.0|2010-12-07 14:57:00|      24|                 36|    3|    3|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
+|   12347.0|2010-12-07 14:57:00|       6|                 36|    5|   17|
+|   12347.0|2010-12-07 14:57:00|       6|                 36|    5|   17|"""
