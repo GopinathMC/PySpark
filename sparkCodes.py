@@ -118,7 +118,7 @@ spark.udf.register('pow3',power3,DoubleType())
 #hiveUDF
 SparkSession.builder().enableHiveSupport()
 create temporary function/permanent as my_fun as 'com.organization.hive.udf.functionName'
-											     
+
 #aggregation
 df.groupBy('col1').agg(expr(avg(c2)),expr(stddev_pop(c3))).show()
 
@@ -151,3 +151,97 @@ CustomerID|        InvoiceDate|Quantity|MaxPurchaseQuantity|Dense|QRank|
 |   12347.0|2010-12-07 14:57:00|      12|                 36|    4|    4|
 |   12347.0|2010-12-07 14:57:00|       6|                 36|    5|   17|
 |   12347.0|2010-12-07 14:57:00|       6|                 36|    5|   17|"""
+
+#partitioning and bucketing while writing df(Bucketing only for Spark managed table)
+csvFile.write.format('PARQUET').mode('overwrite').partitionBy('country').save('hdfs:nameservice/prd/product/fibi_ibp')
+csvFile.write.format('PARQUET').mode('overwrite').bucketBy(10,'country').saveAsTable('BucketTable')#if you give .saveAsTable('BucketTable'), it will be stored in default hive location (i.e)/user.hive/warehouse
+csvFile.write.option('maxRecordsPerFile',5000).format('ORC').save('hdfs:nameservice/prd/product/fibi_ibp')#can specify the number of records in file
+
+
+
+
+#########################################################################RDD operations#############################################################
+
+rd2 = rd1.keyBy(lambda x:x.upper()[1])#to get key value pairs
+rd2.collect()
+[('H', 'Dhoni'), ('A', 'Watson'), ('A', 'Raina'), ('A', 'Jaduu')]
+rd3 = rd2.mapValues(lambda x:x.upper()) #mapvalues to some functions
+
+#broadcast variable, it shares variable/rdd to all executors so that serializable operation is prevented across nodes which results better speed/performance
+a = {'Gopi':'Bat','Nath','Bowl'}
+bc = sc.broadcast(a)#broadcasted to all executors
+bc.value#to see data
+word = sc.parallelize(['Gopi','Nath','Arul'])
+rdd1 = word.map(lambda x : (x,bc.value.get(x,0)))#[('Gopi', 'Bat'), ('Nath', 'Bowl'), ('Arul', 0)]
+rdsort = rdd1.sortBy(lambda x:x[1])#[('Arul', 0), ('Gopi', 'Bat'), ('Nath', 'Bowl')]
+
+#accumulators a mutable variable that can be updated through series of transformations and send it to driver node more efficiently
+flight = spark.read.format('csv').option('header','true').option('inferschema','true').load('file:///efs/home/ps900191/pyspark_prjct/DataBricks/Data/FlightData/csv/FlightData.csv')
+acChina = sc.accumulator(0)#accumulator variable created i.e.acChina
+def accuChi(x):
+     dest = x['DEST_COUNTRY_NAME']
+     orig = x['ORIGIN_COUNTRY_NAME']
+     if(dest=='China' or orig=='China'):
+         acChina.add(x['count'])
+rd11 = flight.foreach(lambda x : accChi(x))
+acChina.value #1692
+
+
+
+###################################################advanced operations DF###########################################################################
+finalDF.printSchema()#[rdid,ordqty,orddt,MRPType]
+from pyspark.sql.functions import max as SparkMax
+finz = finalDF.groupBy('MRPType').pivot('orddt').agg(max(col('ordqty')))[MRPType,'2020-01-29','2019-01-30'......]
+columns = ["v"+str(i) for i in range(1,len(finz.columns)-1)] #[v1,v2,v3,v4......]
+columns.insert(0,'MRP') #[MRP,v1,v2......]
+finz = finz.toDF(*columns) #changing the columns names[MRP,v1,v2...]
+#to perform operaion between adjacent cols
+finzDiff = finz
+for i in range(1,len(finz.columns)-1):
+    finzDiff = finz.withColumn(columns(i),col(columns(i))-col(columns(i+1)))
+	
+#read table from MySQL
+orders = (spark
+             .read
+             .format("jdbc")
+             .option("url", "jdbc:mysql://localhost/retail_db")
+             .option("driver", "com.mysql.jdbc.Driver")
+             .option("dbtable", "orders")
+             .option("user", "root")
+             .option("password", "cloudera")
+             .load())
+
+
+
+			 
+#####################################################PANDAS############################################################
+import pandas as pd
+file = 'D:/...'
+df = pd.read_csv(file,sep=',',header=0,index_col=False,names=None)#read csv file
+df.columns.tolist #list column names
+df['sales_rep'].value_counts() #return map with value in key and its count in value
+df1 = df.drop(columns=['zcmodeid','zcustprdstatus']) #drop columns
+
+#filtering
+mask = (df['prdid'].isin([100001442,100127884])) & (df['soldtoid']==1500000473)
+print(df[mask])
+
+#locating
+print(df.loc[2,['prdid','custid']])
+
+#apply UDF
+def calendar_year(x,y):
+    x=str(x)
+    if y in ['June','July','August','September','October','November','December']:
+       ans =  'FY'+x[2:4]+str((int(x[2:4])+1))
+    else:
+        ans = 'FY'+str((int(x[2:4])-1))+x[2:4]
+    return ans
+
+recharge_new['fy'] = recharge_new.apply(lambda x : calendar_year(x['calendar_year'],x['financial_month']),axis=1)
+print(recharge_new.head(10))
+
+
+######################################################THEORY SPARK ########################################################
+Modes:
+1. Cluster Mode: 
