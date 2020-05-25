@@ -31,5 +31,12 @@ from retail_price
 where concat(cast(invoiceno as string),cast(unitprice as string)) in 
 (select concat(cast(invoiceno as string),cast(max_price as string)) from detail)
 
+--finding values of before/after row values i.e.lead(col,offset,defaultval)
+select invoiceno,stockcode,customerid,unitprice,
+lag(unitprice,1,0) over(partition by invoiceno order by invoiceno) as lead_unit_price
+from retail_price;
+select invoiceno,stockcode,customerid,unitprice,
+lead(unitprice,2,0) over(partition by invoiceno order by invoiceno) as lead_unit_price
+from retail_price;               
 
 
