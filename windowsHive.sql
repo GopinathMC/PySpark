@@ -39,4 +39,15 @@ select invoiceno,stockcode,customerid,unitprice,
 lead(unitprice,2,0) over(partition by invoiceno order by invoiceno) as lead_unit_price
 from retail_price;               
 
+--time problem
+select a.user_id,a.episode_name,a.start,a.`end`,
+sum(a.val) over(partition by a.user_id,a.episode_name order by a.user_id rows between unbounded preceding and current row)
+as cumulative_sum
+from(
 
+select b.user_id,b.episode_name,b.start,b.`end`,
+case when b.start<lag(b.`end`,1,0) over(partition by b.user_id,b.episode_name order by b.user_id) then 
+(b.`end`-lag(b.`end`,1) over(partition by b.user_id,b.episode_name order by b.user_id))
+else (b.`end`-b.start) end as val
+from (select user_id,episode_name,case when start=1 then 0 else start end as start,`end` from showtime)b
+)a;
