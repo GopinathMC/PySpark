@@ -1,11 +1,11 @@
 #1 read multiple csv file
 from pyspark.sql.functions import col,window,desc
-staticDF = spark.read.format('csv').option('inferschema','true').option('header','true').load('file:///efs/home/ps900191/pyspark_prjct/DataBricks/Data/RetailData/*.csv*)
+staticDF = spark.read.format('csv').option('inferschema','true').option('header','true').load('file:/*.csv*)
 df4 = staticDF.selectExpr('CustomerID','(Quantity * UnitPrice) as TotalCost','InvoiceDate').groupBy(col('CustomerID'),window('InvoiceDate','1 day')).sum('TotalCost').sort(desc('CustomerID')) #window function grouping the total cost with 1 day irrespective of time of that day
 df1 = flightData.groupBy('DEST_COUNTRY_NAME').sum('count').withColumnRenamed('sum(count)','DestTotal').sort(desc('DestTotal'))
 
 #sparkStreaming
-streamDF = spark.readStream.schema(staticSchema).option('maxFilesPerTrigger',1).option('header','true').format('csv').load('file:///efs/home/ps900191/pyspark_prjct/DataBricks/Data/RetailData/*.csv*')#create streaming dataframe
+streamDF = spark.readStream.schema(staticSchema).option('maxFilesPerTrigger',1).option('header','true').format('csv').load('fa/*.csv*')#create streaming dataframe
 #streamDF.isStreaming => True, means its straming check
 purchasePerHr = streamDF.selectExpr('CustomerID','(Quantity * UnitPrice) as TotalCost','InvoiceDate').groupBy(col('CustomerID'),window('InvoiceDate','1 day')).sum('TotalCost').sort(desc('CustomerID'))#apply business logic
 purchasePerHr.writeStream.format('memory').queryName('cust_purchase').outputMode('complete').start()#streaming Action, stores data in in-memory table, here 'cust_purchase'
@@ -14,7 +14,7 @@ df2 = spark.sql('select * from cust_purchase')
 #define schema manually
 from pyspark.sql.types import StructType,StructField,StringType,LongType
 mySchema = StructType([StructField('Destination',StringType(),True),StructField('Origination',StringType(),True),StructField('Count',LongType(),False,metadata={'hello':'world'})])
-flight = spark.read.format('json').schema(mySchema).load('file:///efs/home/ps900191/pyspark_prjct/DataBricks/Data/FlightData/json/flightData.json')
+flight = spark.read.format('json').schema(mySchema).load('file.json')
 
 #selectExpr(helpful for doing aggregation operations compared to select statement)
 flight.selectExpr('*','(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME) as withinCountry').show()
@@ -155,7 +155,7 @@ CustomerID|        InvoiceDate|Quantity|MaxPurchaseQuantity|Dense|QRank|
 #partitioning and bucketing while writing df(Bucketing only for Spark managed table)
 csvFile.write.format('PARQUET').mode('overwrite').partitionBy('country').save('hdfs:nameservice/prd/product/fibi_ibp')
 csvFile.write.format('PARQUET').mode('overwrite').bucketBy(10,'country').saveAsTable('BucketTable')#if you give .saveAsTable('BucketTable'), it will be stored in default hive location (i.e)/user.hive/warehouse
-csvFile.write.option('maxRecordsPerFile',5000).format('ORC').save('hdfs:nameservice/prd/product/fibi_ibp')#can specify the number of records in file
+csvFile.write.option('maxRecordsPerFile',5000).format('ORC').save('hdfs:')#can specify the number of records in file
 
 
 
@@ -176,7 +176,7 @@ rdd1 = word.map(lambda x : (x,bc.value.get(x,0)))#[('Gopi', 'Bat'), ('Nath', 'Bo
 rdsort = rdd1.sortBy(lambda x:x[1])#[('Arul', 0), ('Gopi', 'Bat'), ('Nath', 'Bowl')]
 
 #accumulators a mutable variable that can be updated through series of transformations and send it to driver node more efficiently
-flight = spark.read.format('csv').option('header','true').option('inferschema','true').load('file:///efs/home/ps900191/pyspark_prjct/DataBricks/Data/FlightData/csv/FlightData.csv')
+flight = spark.read.format('csv').option('header','true').option('inferschema','true').load('fa/c')
 acChina = sc.accumulator(0)#accumulator variable created i.e.acChina
 def accuChi(x):
      dest = x['DEST_COUNTRY_NAME']
