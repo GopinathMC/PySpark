@@ -3,7 +3,7 @@
 import sys
 from pyspark.sql import SQLContext
 sqlContext = SQLContext(sc)
-words = sc.textFile("file:///efs/home/ps900191/test2")
+words = sc.textFile("file:///2")
 lines = words.flatMap(lambda line : line.split(" "))
 wordcount = lines.map(lambda word : (word,1))
 aggrcount = wordcount.reduceByKey(lambda a,b : a+b)
