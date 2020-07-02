@@ -6,7 +6,7 @@ from pyspark.sql import SQLContext,Row
 sc = SparkContext()
 sqlContext = SQLContext(sc)
 
-rdd1 = sc.textFile("file:///efs/home/ps900191/pyspark_prjct/Load_HiveTBL_from_txtFile/sample_data.txt")
+rdd1 = sc.textFile("file:...")
 
 header = rdd1.first()
 data = rdd1.filter(lambda x : x!=header)
