@@ -10,11 +10,10 @@ hiveContext = HiveContext(sc)
 hiveContext.setConf("hive.exec.dynamic.partition","true")
 hiveContext.setConf("hive.exec.dynamic.partition.mode","nonstrict")
 
-jsonDf = hiveContext.read.json("file:///efs/home/ps900191/pyspark_prjct/Load_HiveTBL_from_Json/jsondata.txt")
+jsonDf = hiveContext.read.json("file:..")
 
 jsonDf.show() 
 #storing the data in hive table
 #below code is to store the data in partitoned table, here I am just storing in non-partitoned table
-#jsonDf.write.mode("append").partitionBy('country').insertInto("dev_internal_cmmp.cust_partition")
 
-jsonDf.write.format("orc").saveAsTable("dev_internal_cmmp.cust_partition1")
+jsonDf.write.format("orc").saveAsTable("")
