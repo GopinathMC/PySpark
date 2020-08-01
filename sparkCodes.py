@@ -222,6 +222,11 @@ df.columns.tolist #list column names
 df['sales_rep'].value_counts() #return map with value in key and its count in value
 df1 = df.drop(columns=['zcmodeid','zcustprdstatus']) #drop columns
 
+#read excel file and convert it as spark df
+#prerequist pip install xlrd
+pddf = pd.read_excel('/dbfs/filename',sheet_name='CDPUPLOAD',inferSchema='True')
+sparkDf = spark.createDataFrame(pddf)
+
 #filtering
 mask = (df['prdid'].isin([100001442,100127884])) & (df['soldtoid']==1500000473)
 print(df[mask])
