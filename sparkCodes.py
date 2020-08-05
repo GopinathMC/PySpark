@@ -249,4 +249,5 @@ print(recharge_new.head(10))
 
 ######################################################THEORY SPARK ########################################################
 Modes:
-1. Cluster Mode: 
+1. Cluster Mode:
+2. Refer github.com/spark-examples/pyspark-examples for more codes
