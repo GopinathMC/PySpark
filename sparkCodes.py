@@ -251,3 +251,4 @@ print(recharge_new.head(10))
 Modes:
 1. Cluster Mode:
 2. Refer github.com/spark-examples/pyspark-examples for more codes
+3. Refer https://github.com/guipsamora/pandas_exercises for more Pandas exercise											      
